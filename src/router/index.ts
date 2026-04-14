@@ -15,7 +15,7 @@ import routes from './routes';
  * with the Router instance.
  */
 
-export default defineRouter((/* { store, ssrContext } */) => {
+export default defineRouter(() => {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : createWebHistory;
