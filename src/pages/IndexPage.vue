@@ -10,8 +10,7 @@
         <q-card class="bg-primary text-white shadow-2">
           <q-card-section>
             <div class="text-h6">Empresas Cadastradas</div>
-            <div class="text-h3 text-weight-bold">--</div>
-            <div class="text-subtitle2">Aguardando rota de métricas</div>
+            <div class="text-h3 text-weight-bold">{{ empresas.length }}</div>
           </q-card-section>
         </q-card>
       </div>
@@ -28,45 +27,29 @@
 
       <div class="col-12 q-mt-lg">
         <q-card class="shadow-1">
-          <q-card-section>
-            <div class="text-h6 text-grey-8 q-mb-md">Busca Rápida de Empresa</div>
+          <q-card-section class="row items-center justify-between">
+            <div class="text-h6 text-grey-8">Lista de Empresas</div>
             
-            <q-form @submit.prevent="buscarEmpresa" class="row q-col-gutter-sm items-start">
-              <div class="col-12 col-md-8">
-                <q-input 
-                  outlined 
-                  v-model="empresaIdBusca" 
-                  label="Digite o ID (UUID) da Empresa"
-                  dense
-                  hide-bottom-space
-                  :rules="[val => !!val || 'O ID é obrigatório']"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="search" />
-                  </template>
-                </q-input>
-              </div>
-              
-              <div class="col-12 col-md-4">
-                <q-btn 
-                  label="Buscar na API" 
-                  color="primary" 
-                  type="submit" 
-                  class="full-width" 
-                  style="height: 40px;" 
-                  :loading="loading"
-                />
-              </div>
-            </q-form>
+            <q-btn 
+              icon="refresh" 
+              flat 
+              round 
+              color="primary" 
+              @click="carregarEmpresas" 
+              :loading="loading"
+              title="Atualizar lista"
+            />
           </q-card-section>
 
-          <q-card-section v-if="empresasEncontradas.length > 0">
-            <q-separator class="q-mb-md" />
-            <div class="text-subtitle2 text-grey-8 q-mb-sm">Resultados Encontrados:</div>
-            
+          <q-card-section v-if="loading && empresas.length === 0" class="text-center q-pa-lg">
+            <q-spinner color="primary" size="3em" />
+            <div class="text-grey-7 q-mt-sm">Carregando dados da API...</div>
+          </q-card-section>
+
+          <q-card-section v-else-if="empresas.length > 0">
             <q-list bordered separator class="rounded-borders bg-white">
               <q-item 
-                v-for="empresa in empresasEncontradas" 
+                v-for="empresa in empresas" 
                 :key="empresa.id"
                 clickable 
                 v-ripple
@@ -88,7 +71,11 @@
                 </q-item-section>
               </q-item>
             </q-list>
+          </q-card-section>
 
+          <q-card-section v-else class="text-center q-pa-lg">
+            <q-icon name="domain_disabled" size="4em" color="grey-4" />
+            <div class="text-grey-6 text-h6 q-mt-md">Nenhuma empresa cadastrada.</div>
           </q-card-section>
         </q-card>
       </div>
@@ -97,29 +84,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import type { EmpresaResponseDTO } from '../schemas/EmpresaResponseDTO';
 
 const router = useRouter();
-const empresaIdBusca = ref('');
 const loading = ref(false);
 
-// Transformamos em array para suportar listas, mesmo que a API traga só 1 por ID no momento
-const empresasEncontradas = ref<EmpresaResponseDTO[]>([]);
+// Estado para armazenar a lista de empresas
+const empresas = ref<EmpresaResponseDTO[]>([]);
 
-const buscarEmpresa = async () => {
+const carregarEmpresas = async () => {
   loading.value = true;
-  empresasEncontradas.value = []; // Limpa a lista antes de buscar
 
   try {
-    const response = await api.get<EmpresaResponseDTO>(`/api/v1/empresas/${empresaIdBusca.value}`);
-    // Coloca o resultado único dentro de um array para o v-for funcionar
-    empresasEncontradas.value = [response.data];
+    // Agora tipamos o retorno do Axios diretamente como um Array de DTOs
+    const response = await api.get<EmpresaResponseDTO[]>('/api/v1/empresas');
+    
+    // Como a API já retorna o array, atribuímos diretamente
+    empresas.value = response.data;
   } catch (error) {
-    console.error('Erro ao buscar empresa:', error);
-    alert('Empresa não encontrada ou erro na API.');
+    console.error('Erro ao carregar empresas:', error);
+    alert('Erro ao carregar a lista de empresas da API.');
   } finally {
     loading.value = false;
   }
@@ -127,7 +114,11 @@ const buscarEmpresa = async () => {
 
 const irParaDetalhes = async (id?: string) => {
   if (!id) return;
-  // Navega para a futura tela de detalhes, passando o UUID na URL
   await router.push({ path: `/empresas/${id}/detalhes` });
 };
+
+// Executa a busca automaticamente quando o componente é montado na tela
+onMounted(async () => {
+  await carregarEmpresas();
+});
 </script>
