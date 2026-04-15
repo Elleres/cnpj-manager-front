@@ -21,7 +21,14 @@ const routes: RouteRecordRaw[] = [
         path: 'empresas/:id/detalhes',
         name: 'empresa-detalhes',
         component: () => import('pages/DetalhesEmpresaPage.vue')
-      }],
+      },
+      {
+        path: 'empresas/:empresaId/filiais/:filialId',
+        name: 'filial-form',
+        component: () => import('pages/FormFilialPage.vue')
+      }
+
+    ],
   },
 
   {

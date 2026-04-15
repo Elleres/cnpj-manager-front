@@ -17,11 +17,14 @@
 
       <div class="col-12 col-md-7">
         <q-card class="shadow-1">
-          <q-card-section class="row items-center justify-between">
-            <div class="text-h6 text-grey-8">Filiais Registadas</div>
-            <q-badge color="primary" label="Filial" v-if="filiais.length > 0">
-              {{ filiais.length }}
-            </q-badge>
+            <q-card-section class="row items-center justify-between">
+            <div class="text-h6 text-grey-8">Filiais Registradas</div>
+            <div>
+              <q-badge color="primary" class="q-mr-sm" v-if="filiais.length > 0">
+                {{ filiais.length }}
+              </q-badge>
+              <q-btn color="primary" icon="add" label="Nova" size="sm" @click="irParaFormulario('nova')" />
+            </div>
           </q-card-section>
 
           <q-separator />
@@ -50,12 +53,15 @@
               </q-item-section>
 
               <q-item-section side>
-                <q-btn flat round icon="more_vert" color="grey-7">
+                <q-btn flat round icon="more_vert" color="grey-7" @click.stop>
                   <q-menu>
                     <q-list style="min-width: 100px">
-                      <q-item clickable v-close-popup>
+                        <q-item clickable v-close-popup @click="irParaFormulario(filial.id)">
+                        <q-item-section avatar>
+                            <q-icon name="edit" size="sm" color="grey-7" />
+                        </q-item-section>
                         <q-item-section>Editar</q-item-section>
-                      </q-item>
+                        </q-item>
                         <q-item clickable v-close-popup :class="filial.ativa ? 'text-negative' : 'text-positive'" @click="alternarStatusFilial(filial)">
                             <q-item-section>
                             {{ filial.ativa ? 'Desativar' : 'Ativar' }}
@@ -80,7 +86,7 @@
 
 <script setup lang="ts">
 import { ref, shallowRef, onMounted, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar'; 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -95,6 +101,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const router = useRouter();
 const route = useRoute();
 const $q = useQuasar(); 
 const filiais = ref<FilialResponseDTO[]>([]);
@@ -195,10 +202,17 @@ const alternarStatusFilial = (filial: FilialResponseDTO) => {
         });
       });
   });
+
 };
 
-onMounted(() => {
-  inicializarMapa();
-  void carregarFiliais();
+const irParaFormulario = async (filialId: string) => {
+const empresaId = route.params.id as string;
+  // O Vue Router vai trocar a URL para a nossa nova tela
+await router.push(`/empresas/${empresaId}/filiais/${filialId}`);
+};
+
+onMounted(async () => {
+    inicializarMapa();
+    await carregarFiliais();
 });
 </script>
