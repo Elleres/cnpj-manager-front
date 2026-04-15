@@ -1,0 +1,7 @@
+services:
+  cnpj-web:
+    build: .
+    container_name: cnpj-manager-web
+    ports:
+      - "9001:80"
+    restart: always

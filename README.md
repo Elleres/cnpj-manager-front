@@ -22,7 +22,7 @@ O **CNPJ Manager Web** é o frontend do ecossistema de gestão de ativos do grup
 ## Guia de Onboarding
 
 ### Pré-requisitos
-* **Node.js** >= 20.x
+* **Node.js** >= 24.x
 * **Quasar CLI** (Opcional, pode usar via `npm`)
 * **API Spring Boot** em execução na porta `8080`
 

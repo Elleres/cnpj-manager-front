@@ -15,16 +15,6 @@
         </q-card>
       </div>
 
-      <div class="col-12 col-md-4">
-        <q-card class="bg-secondary text-white shadow-2">
-          <q-card-section>
-            <div class="text-h6">Filiais Ativas</div>
-            <div class="text-h3 text-weight-bold">--</div>
-            <div class="text-subtitle2">Aguardando rota de métricas</div>
-          </q-card-section>
-        </q-card>
-      </div>
-
       <div class="col-12 q-mt-lg">
         <q-card class="shadow-1">
           <q-card-section class="row items-center justify-between">
