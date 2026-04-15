@@ -27,12 +27,12 @@
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple exact to="/empresas">
+        <q-item clickable v-ripple exact to="/empresas/nova">
           <q-item-section avatar>
-            <q-icon name="business" />
+            <q-icon name="add" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Gerenciar Empresas</q-item-label>
+            <q-item-label>Nova Empresa</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>

@@ -26,8 +26,12 @@ const routes: RouteRecordRaw[] = [
         path: 'empresas/:empresaId/filiais/:filialId',
         name: 'filial-form',
         component: () => import('pages/FormFilialPage.vue')
+      },
+      {
+        path: 'empresas/:id',
+        name: 'empresa-form',
+        component: () => import('pages/FormEmpresaPage.vue')
       }
-
     ],
   },
 

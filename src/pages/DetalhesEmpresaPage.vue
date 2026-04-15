@@ -8,6 +8,15 @@
       </div>
     </div>
 
+    <q-btn 
+        label="Excluir Empresa" 
+        icon="delete_forever" 
+        color="negative" 
+        outline 
+        @click="confirmarExclusaoEmpresa"
+        :loading="deletingEmpresa"
+      />
+
     <div class="row q-col-gutter-md">
         <div class="col-12 col-md-5">
         <q-card class="shadow-1 overflow-hidden" style="height: 500px;">
@@ -209,6 +218,48 @@ const irParaFormulario = async (filialId: string) => {
 const empresaId = route.params.id as string;
   // O Vue Router vai trocar a URL para a nossa nova tela
 await router.push(`/empresas/${empresaId}/filiais/${filialId}`);
+};
+
+
+const deletingEmpresa = ref(false);
+
+const confirmarExclusaoEmpresa = () => {
+  const empresaId = route.params.id as string;
+
+  $q.dialog({
+    title: 'Excluir Matriz?',
+    message: 'Atenção: Esta ação é irreversível. Ao excluir a matriz, todas as filiais vinculadas também serão removidas do sistema.',
+    cancel: true,
+    persistent: true,
+    ok: {
+      label: 'Sim, Excluir Tudo',
+      color: 'negative',
+      flat: true
+    }
+  }).onOk(() => {
+    deletingEmpresa.value = true;
+    
+    api.delete(`/api/v1/empresas/${empresaId}`)
+      .then(async () => {
+        $q.notify({
+          type: 'positive',
+          message: 'Empresa e suas filiais removidas com sucesso.',
+          position: 'top'
+        });
+        // Redireciona para o Dashboard (IndexPage)
+        await router.push({ name: 'dashboard' });
+      })
+      .catch((error) => {
+        console.error('Erro ao excluir empresa:', error);
+        $q.notify({
+          type: 'negative',
+          message: 'Erro ao tentar excluir a empresa. Verifique as dependências.'
+        });
+      })
+      .finally(() => {
+        deletingEmpresa.value = false;
+      });
+  });
 };
 
 onMounted(async () => {

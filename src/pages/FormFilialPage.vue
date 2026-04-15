@@ -111,6 +111,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import api from '../services/api';
+import type { FilialCreateDTO } from 'src/schemas/FilialCreateDTO';
 
 const route = useRoute();
 const router = useRouter();
@@ -127,7 +128,7 @@ const saving = ref(false);
 const deleting = ref(false);
 
 // Objeto reativo do formulário
-const form = ref({
+const form = ref<FilialCreateDTO>({
   empresaId: empresaId,
   cnpjCompleto: '',
   nomeFantasia: '',
@@ -139,8 +140,8 @@ const form = ref({
     numero: '',
     cidade: '',
     estado: '',
-    latitude: null as number | null,
-    longitude: null as number | null
+    latitude: 0,
+    longitude: 0
   }
 });
 
