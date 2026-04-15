@@ -28,19 +28,16 @@ export default defineRouter(() => {
   });
 
   // BLOCO ATUALIZADO
-  Router.beforeEach((to, from, next) => {
+  Router.beforeEach((to) => {
     const isAuthenticated = !!localStorage.getItem('token');
 
     if (!isAuthenticated && to.name !== 'login') {
-
-      next({ name: 'login' });
+      return { name: 'login' };
     }
     else if (isAuthenticated && to.name === 'login') {
-      next({ name: 'dashboard' });
+      return { name: 'dashboard' };
     }
-    else {
-      next();
-    }
+    return true;
   });
 
   return Router;

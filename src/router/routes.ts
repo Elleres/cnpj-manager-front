@@ -10,15 +10,18 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
     children: [
       {
         path: '',
         name: 'dashboard',
         component: () => import('pages/IndexPage.vue')
       },
-      // Futuramente, a rota de empresas entrará aqui também
-    ],
+      {
+        path: 'empresas/:id/detalhes',
+        name: 'empresa-detalhes',
+        component: () => import('pages/DetalhesEmpresaPage.vue')
+      }],
   },
 
   {
