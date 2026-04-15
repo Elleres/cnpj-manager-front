@@ -9,15 +9,11 @@
     </div>
 
     <div class="row q-col-gutter-md">
-      <div class="col-12 col-md-5">
-        <q-card class="shadow-1 full-height flex flex-center bg-grey-3" style="min-height: 400px;">
-          <div class="text-center text-grey-6">
-            <q-icon name="map" size="4rem" />
-            <div class="text-h6">Espaço do Mapa</div>
-            <p>Integração com Leaflet/Google Maps em breve</p>
-          </div>
+        <div class="col-12 col-md-5">
+        <q-card class="shadow-1 overflow-hidden" style="height: 500px;">
+            <div id="map-container" style="height: 100%; width: 100%;"></div>
         </q-card>
-      </div>
+        </div>
 
       <div class="col-12 col-md-7">
         <q-card class="shadow-1">
@@ -83,25 +79,76 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, shallowRef, onMounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
-import { useQuasar } from 'quasar'; // Importe o useQuasar
+import { useQuasar } from 'quasar'; 
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import api from '../services/api';
 import type { FilialResponseDTO } from '../schemas/FilialResponseDTO';
 
+// @ts-expect-error O Leaflet modifica o protótipo internamente e quebra a tipagem
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
 const route = useRoute();
-const $q = useQuasar(); // Instancie o utilitário
+const $q = useQuasar(); 
 const filiais = ref<FilialResponseDTO[]>([]);
 const loading = ref(false);
 
+// Variáveis do Mapa
+const mapInstance = shallowRef<L.Map | null>(null);
+const markerLayer = shallowRef<L.LayerGroup | null>(null);
+
+const inicializarMapa = () => {
+  mapInstance.value = L.map('map-container').setView([-1.4558, -48.4902], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(mapInstance.value);
+  markerLayer.value = L.layerGroup().addTo(mapInstance.value);
+};
+
+const atualizarMarcadores = () => {
+  if (!mapInstance.value || !markerLayer.value) return;
+  
+  markerLayer.value.clearLayers();
+  const pontos: L.LatLngExpression[] = [];
+
+  filiais.value.forEach((filial) => {
+    const { latitude, longitude } = filial.endereco;
+    if (latitude && longitude) {
+      const coord: L.LatLngExpression = [latitude, longitude];
+      pontos.push(coord);
+      L.marker(coord)
+        .bindPopup(`
+          <strong>${filial.nomeFantasia || 'Filial'}</strong><br>
+          ${filial.endereco.logradouro}, ${filial.endereco.numero}<br>
+          Status: ${filial.ativa ? 'Ativa' : 'Inativa'}
+        `)
+        .addTo(markerLayer.value!);
+    }
+  });
+
+  if (pontos.length > 0) {
+    const bounds = L.latLngBounds(pontos);
+    mapInstance.value.fitBounds(bounds, { padding: [50, 50] });
+  }
+};
+
 const carregarFiliais = async () => {
   const empresaId = route.params.id as string;
-  if (!empresaId) return;
-
   loading.value = true;
+  
   try {
     const response = await api.get<FilialResponseDTO[]>(`/api/v1/empresas/${empresaId}/filiais`);
     filiais.value = response.data;
+    
+    await nextTick();
+    atualizarMarcadores();
   } catch (error) {
     console.error('Erro ao carregar filiais:', error);
   } finally {
@@ -126,13 +173,12 @@ const alternarStatusFilial = (filial: FilialResponseDTO) => {
       flat: true
     }
   }).onOk(() => {
-    // Dispara o PATCH com o valor invertido
     api.patch(`/api/v1/filiais/${filial.id}`, { ativa: novoStatus })
       .then(() => {
-        // Atualiza a reatividade na tela
         const filialEncontrada = filiais.value.find(f => f.id === filial.id);
         if (filialEncontrada) {
           filialEncontrada.ativa = novoStatus;
+          atualizarMarcadores(); 
         }
 
         $q.notify({
@@ -150,7 +196,9 @@ const alternarStatusFilial = (filial: FilialResponseDTO) => {
       });
   });
 };
-onMounted(async () => {
-  await carregarFiliais();
+
+onMounted(() => {
+  inicializarMapa();
+  void carregarFiliais();
 });
 </script>
